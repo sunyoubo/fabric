@@ -85,12 +85,12 @@ func createChannelFromDefaults(cf *ChannelCmdFactory) (*cb.Envelope, error) {
 }
 
 func createChannelFromConfigTx(configTxFileName string) (*cb.Envelope, error) {
-	cftx, err := ioutil.ReadFile(configTxFileName)
+	cftx, err := ioutil.ReadFile(configTxFileName) // 读取channel.tx文件内容
 	if err != nil {
 		return nil, ConfigTxFileNotFound(err.Error())
 	}
 
-	return utils.UnmarshalEnvelope(cftx)
+	return utils.UnmarshalEnvelope(cftx) // 把从channel.tx文件中读取到的内容，解析到Envelope struct 实例中
 }
 
 func sanityCheckAndSignConfigTx(envConfigUpdate *cb.Envelope) (*cb.Envelope, error) {
@@ -142,20 +142,23 @@ func sanityCheckAndSignConfigTx(envConfigUpdate *cb.Envelope) (*cb.Envelope, err
 	return utils.CreateSignedEnvelope(cb.HeaderType_CONFIG_UPDATE, chainID, signer, configUpdateEnv, 0, 0)
 }
 
+//创建应用通道，通道和chain一一对应
 func sendCreateChainTransaction(cf *ChannelCmdFactory) error {
 	var err error
 	var chCrtEnv *cb.Envelope
 
-	if channelTxFile != "" {
+	if channelTxFile != "" { //根据指定channel.tx（由configtxgen工具提前生成）文件创建通道配置
+		//构造一个创建应用通道的配置交易结构,封装为	Envelope
 		if chCrtEnv, err = createChannelFromConfigTx(channelTxFile); err != nil {
 			return err
 		}
-	} else {
+	} else { // 利用默认配置创建应用通道的配置交易结构
 		if chCrtEnv, err = createChannelFromDefaults(cf); err != nil {
 			return err
 		}
 	}
 
+	// 智能检查并签名配置交易
 	if chCrtEnv, err = sanityCheckAndSignConfigTx(chCrtEnv); err != nil {
 		return err
 	}
@@ -167,7 +170,7 @@ func sendCreateChainTransaction(cf *ChannelCmdFactory) error {
 	}
 
 	defer broadcastClient.Close()
-	err = broadcastClient.Send(chCrtEnv)
+	err = broadcastClient.Send(chCrtEnv) // 发送配置交易到order
 
 	return err
 }

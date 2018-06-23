@@ -394,7 +394,7 @@ func (m *Payload) GetData() []byte {
 }
 
 // Envelope wraps a Payload with a signature so that the message may be authenticated
-type Envelope struct {
+type Envelope struct { // 信封结构
 	// A marshaled Payload
 	Payload []byte `protobuf:"bytes,1,opt,name=payload,proto3" json:"payload,omitempty"`
 	// A signature by the creator specified in the Payload header

@@ -50,6 +50,7 @@ const (
 	OrdererNotRequired  OrdererRequirement  = false
 )
 
+//首字符小写的变量，只可以在当前包中使用，像面向对象语言中的 protected
 var (
 	// join related variables.
 	genesisBlockPath string

@@ -98,23 +98,24 @@ func channelID(env *cb.Envelope) (string, error) {
 	return chdr.ChannelId, nil
 }
 
+// 更加配置更新新建通道或者更新通道配置
 // Process takes in an envelope of type CONFIG_UPDATE and proceses it
 // to transform it either into to a new channel creation request, or
 // into a channel CONFIG transaction (or errors on failure)
 func (p *Processor) Process(envConfigUpdate *cb.Envelope) (*cb.Envelope, error) {
-	channelID, err := channelID(envConfigUpdate)
+	channelID, err := channelID(envConfigUpdate) // 根据配置交易解析channelID
 	if err != nil {
 		return nil, err
 	}
 
-	support, ok := p.manager.GetChain(channelID)
+	support, ok := p.manager.GetChain(channelID) //检查通道是否存在，没找到具体实现
 	if ok {
 		logger.Debugf("Processing channel reconfiguration request for channel %s", channelID)
 		return p.existingChannelConfig(envConfigUpdate, channelID, support)
 	}
 
 	logger.Debugf("Processing channel creation request for channel %s", channelID)
-	return p.newChannelConfig(channelID, envConfigUpdate)
+	return p.newChannelConfig(channelID, envConfigUpdate) // 更新应用通道到系统通道中
 }
 
 func (p *Processor) existingChannelConfig(envConfigUpdate *cb.Envelope, channelID string, support Support) (*cb.Envelope, error) {
