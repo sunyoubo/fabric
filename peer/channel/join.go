@@ -69,16 +69,17 @@ func getJoinCCSpec() (*pb.ChaincodeSpec, error) {
 		return nil, errors.New("Must supply genesis block file")
 	}
 
-	gb, err := ioutil.ReadFile(genesisBlockPath)
+	gb, err := ioutil.ReadFile(genesisBlockPath) // 读取join channel -b传入的channel.block文件
 	if err != nil {
 		return nil, GBFileNotFoundErr(err.Error())
 	}
 	// Build the spec
 	input := &pb.ChaincodeInput{Args: [][]byte{[]byte(cscc.JoinChain), gb}}
 
+	// 构建ChaincodeSpec	结构
 	spec := &pb.ChaincodeSpec{
 		Type:        pb.ChaincodeSpec_Type(pb.ChaincodeSpec_Type_value["GOLANG"]),
-		ChaincodeId: &pb.ChaincodeID{Name: "cscc"},
+		ChaincodeId: &pb.ChaincodeID{Name: "cscc"},  //配置系统chaincode
 		Input:       input,
 	}
 
@@ -91,6 +92,7 @@ func executeJoin(cf *ChannelCmdFactory) (err error) {
 		return err
 	}
 
+	// 构造chaincode调用空间,包括ChaincodeSpec和签名算法
 	// Build the ChaincodeInvocationSpec message
 	invocation := &pb.ChaincodeInvocationSpec{ChaincodeSpec: spec}
 
@@ -100,17 +102,19 @@ func executeJoin(cf *ChannelCmdFactory) (err error) {
 	}
 
 	var prop *pb.Proposal
+	// 创建交易提案（加入通道交易）
 	prop, _, err = putils.CreateProposalFromCIS(pcommon.HeaderType_CONFIG, "", invocation, creator)
 	if err != nil {
 		return fmt.Errorf("Error creating proposal for join %s", err)
 	}
 
 	var signedProp *pb.SignedProposal
-	signedProp, err = putils.GetSignedProposal(prop, cf.Signer)
+	signedProp, err = putils.GetSignedProposal(prop, cf.Signer) // 签名交易提案
 	if err != nil {
 		return fmt.Errorf("Error creating signed proposal %s", err)
 	}
 
+	// 客户端通过	gRPC将Proposal签名后发给Endorser(所操作的Peer)
 	var proposalResp *pb.ProposalResponse
 	proposalResp, err = cf.EndorserClient.ProcessProposal(context.Background(), signedProp)
 	if err != nil {
@@ -128,6 +132,7 @@ func executeJoin(cf *ChannelCmdFactory) (err error) {
 	return nil
 }
 
+// peer 节点加入通道调用方法
 func join(cmd *cobra.Command, args []string, cf *ChannelCmdFactory) error {
 	if genesisBlockPath == common.UndefinedParamValue {
 		return errors.New("Must supply genesis block path")

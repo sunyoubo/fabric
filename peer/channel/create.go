@@ -178,12 +178,12 @@ func sendCreateChainTransaction(cf *ChannelCmdFactory) error {
 func executeCreate(cf *ChannelCmdFactory) error {
 	var err error
 
-	if err = sendCreateChainTransaction(cf); err != nil {
+	if err = sendCreateChainTransaction(cf); err != nil { // 调用创建应用通道
 		return err
 	}
 
 	var block *cb.Block
-	if block, err = getGenesisBlock(cf); err != nil {
+	if block, err = getGenesisBlock(cf); err != nil { //利用grpc从orderer获取通道配置区块
 		return err
 	}
 
@@ -192,6 +192,7 @@ func executeCreate(cf *ChannelCmdFactory) error {
 		return err
 	}
 
+	// 固定权限（所属用户可读可写，其他用户可读）写入.block文件
 	file := chainID + ".block"
 	if err = ioutil.WriteFile(file, b, 0644); err != nil {
 		return err
@@ -200,6 +201,7 @@ func executeCreate(cf *ChannelCmdFactory) error {
 	return nil
 }
 
+// channel create命令调用时执行
 func create(cmd *cobra.Command, args []string, cf *ChannelCmdFactory) error {
 	//the global chainID filled by the "-c" command
 	if chainID == common.UndefinedParamValue {

@@ -83,7 +83,7 @@ func (m *SignedProposal) GetSignature() []byte {
 // 3. The extension is a ChaincodeAction that might be used to ask the
 //    endorsers to endorse a specific ChaincodeAction, thus emulating the
 //    submitting peer model.
-type Proposal struct {
+type Proposal struct {  // 交易提案结构
 	// The header of the proposal. It is the bytes of the Header
 	Header []byte `protobuf:"bytes,1,opt,name=header,proto3" json:"header,omitempty"`
 	// The payload of the proposal as defined by the type in the proposal

@@ -93,7 +93,7 @@ func instantiate(cmd *cobra.Command, cf *ChaincodeCmdFactory) (*protcommon.Envel
 
 	if proposalResponse != nil {
 		// assemble a signed transaction (it's an Envelope message)
-		env, err := utils.CreateSignedTx(prop, cf.Signer, proposalResponse)
+		env, err := utils.CreateSignedTx(prop, cf.Signer, proposalResponse) // 返回Envelop结构的交易，待发送到orderer
 		if err != nil {
 			return nil, fmt.Errorf("Could not assemble transaction, err %s", err)
 		}
@@ -122,7 +122,7 @@ func chaincodeDeploy(cmd *cobra.Command, args []string, cf *ChaincodeCmdFactory)
 	}
 
 	if env != nil {
-		err = cf.BroadcastClient.Send(env)
+		err = cf.BroadcastClient.Send(env) // 发送实例化交易信息到orderer
 	}
 
 	return err
