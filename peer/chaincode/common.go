@@ -114,6 +114,7 @@ func chaincodeInvokeOrQuery(cmd *cobra.Command, args []string, invoke bool, cf *
 		return fmt.Errorf("%s - %v", err, proposalResp)
 	}
 
+	// query不需要创建SignedTx发送到Orderer,而且会返回查询的结果
 	if invoke {
 		if proposalResp.Response.Status >= shim.ERROR {
 			logger.Debugf("ESCC invoke result: %v", proposalResp)
@@ -321,23 +322,27 @@ func ChaincodeInvokeOrQuery(
 	}
 
 	var proposalResp *pb.ProposalResponse
+	// 将签名后的	Proposal发给指定的Peer节点进行背书
 	proposalResp, err = endorserClient.ProcessProposal(context.Background(), signedProp)
 	if err != nil {
 		return nil, fmt.Errorf("Error endorsing %s: %s", funcName, err)
 	}
 
+	// query不需要创建SignedTx发送到Orderer,而且会返回查询的结果
 	if invoke {
 		if proposalResp != nil {
 			if proposalResp.Response.Status >= shim.ERROR {
 				return proposalResp, nil
 			}
 			// assemble a signed transaction (it's an Envelope message)
+			// 创建签名交易,防篡改？
 			env, err := putils.CreateSignedTx(prop, signer, proposalResp)
 			if err != nil {
 				return proposalResp, fmt.Errorf("Could not assemble transaction, err %s", err)
 			}
 
 			// send the envelope for ordering
+			// 发送交易到orderer节点进行全网排序,只有invoke调用才需要，query调用不需要
 			if err = bc.Send(env); err != nil {
 				return proposalResp, fmt.Errorf("Error sending transaction %s: %s", funcName, err)
 			}
